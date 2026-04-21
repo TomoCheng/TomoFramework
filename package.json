@@ -1,0 +1,11 @@
+{
+  "name": "com.tomo.framework",
+  "version": "1.0.0",
+  "displayName": "TomoFramework",
+  "description": "Framework for develop games more convenient by Tomo",
+  "unity": "6000.3",
+  "unityRelease": "13f1",
+  "author": {
+    "name": "Tomo"
+  }
+}

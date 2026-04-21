@@ -1,0 +1,30 @@
+{
+    "name": "Tomo.Framework.Runtime",
+    "rootNamespace": "Tomo",
+    "references": [
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {"name": "com.unity.2d.sprite", "expression": "1.0.0", "define": "TOMO_2D_SPRITE"},
+        {
+            "name": "com.unity.addressables",
+            "expression": "",
+            "define": "TOMO_ADDRESSABLES"
+        },
+        {
+            "name": "com.cysharp.unitask",
+            "expression": "",
+            "define": "TOMO_UNITASK"
+        }
+    ],
+    "noEngineReferences": false
+}
