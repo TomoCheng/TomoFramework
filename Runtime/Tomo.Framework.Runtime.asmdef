@@ -14,6 +14,7 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [
+        {"name": "com.unity.ugui", "expression": "1.0.0", "define": "TOMO_UGUI"},
         {"name": "com.unity.2d.sprite", "expression": "1.0.0", "define": "TOMO_2D_SPRITE"},
         {
             "name": "com.unity.addressables",

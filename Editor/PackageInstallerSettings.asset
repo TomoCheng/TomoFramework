@@ -11,22 +11,39 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c27b9ae03dedec349957e59dd22bccb4, type: 3}
   m_Name: PackageInstallerSettings
-  m_EditorClassIdentifier: Tomo.Framework.Editor::Tomo.Framework.Editor.PackageInstallerSettings
+  m_EditorClassIdentifier: Tomo.Framework.Editor::Tomo.Editor.PackageInstallerSettings
   TargetAsmdefName: Tomo.Framework.Runtime
   PackagesToInstall:
   - PackageId: com.unity.addressables
     InstallSource: com.unity.addressables
+    VersionDefine:
+      Expression: 1.0.0
+      Symbol: TOMO_ADDRESSABLES
+    AssetImport:
+      TargetFolder: 
+      SourcePackagePath: 
   - PackageId: com.cysharp.unitask
     InstallSource: https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask
+    VersionDefine:
+      Expression: 2.0.0
+      Symbol: TOMO_UNITASK
+    AssetImport:
+      TargetFolder: 
+      SourcePackagePath: 
   - PackageId: com.unity.2d.sprite
     InstallSource: com.unity.2d.sprite
-  VersionDefines:
-  - Name: com.cysharp.unitask
-    Expression: 2.0.0
-    Symbol: TOMO_UNITASK
-  - Name: com.unity.addressables
-    Expression: 1.0.0
-    Symbol: TOMO_ADDRESSABLES
-  - Name: com.unity.2d.sprite
-    Expression: 1.0.0
-    Symbol: TOMO_2D_SPRITE
+    VersionDefine:
+      Expression: 1.0.0
+      Symbol: TOMO_2D_SPRITE
+    AssetImport:
+      TargetFolder: 
+      SourcePackagePath: 
+  - PackageId: com.unity.ugui
+    InstallSource: com.unity.ugui
+    VersionDefine:
+      Expression: 1.0.0
+      Symbol: TOMO_UGUI
+    AssetImport:
+      TargetFolder: Assets/TextMesh Pro
+      SourcePackagePath: Packages/com.unity.ugui/Package Resources/TMP Essential
+        Resources.unitypackage
