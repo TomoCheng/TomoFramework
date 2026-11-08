@@ -22,39 +22,23 @@ namespace Tomo.Asset
 		}
 		public async UniTask<T_ASSET> LoadAsset<T_ASSET>(string address, CancellationToken cancellationToken = default) where T_ASSET : class
 		{
-			AsyncOperationHandle<T_ASSET> handle = Addressables.LoadAssetAsync<T_ASSET>(address);
-
-			var loadAsset = await LoadProcess(handle, cancellationToken);
-			if (cancellationToken.IsCancellationRequested) { Addressables.Release(handle); }
-
-			return (cancellationToken.IsCancellationRequested ? null : loadAsset);
+			var (success, asset) = await LoadProcess(Addressables.LoadAssetAsync<T_ASSET>(address), cancellationToken);
+			return success ? asset : null;
 		}
 		public async UniTask<IList<T_ASSET>> LoadAssetsByLabel<T_ASSET>(string label, CancellationToken cancellationToken = default) where T_ASSET : class
 		{
-			AsyncOperationHandle<IList<T_ASSET>> handle = Addressables.LoadAssetsAsync<T_ASSET>(label, null);
-
-			var assets = await LoadProcess(handle, cancellationToken);
-			if (cancellationToken.IsCancellationRequested) { Addressables.Release(handle); }
-
-			return (cancellationToken.IsCancellationRequested ? null : assets);
+			var (success, assets) = await LoadProcess(Addressables.LoadAssetsAsync<T_ASSET>(label, null), cancellationToken);
+			return success ? assets : null;
 		}
 		public async UniTask<GameObject> Instantiate(string address, Transform parent = null, bool inWorldSpace = false, CancellationToken cancellationToken = default)
 		{
-			AsyncOperationHandle<GameObject> handle = Addressables.InstantiateAsync(address, parent, inWorldSpace);
-
-			var instance = await LoadProcess(handle, cancellationToken);
-			if (cancellationToken.IsCancellationRequested) { Addressables.ReleaseInstance(handle); }
-
-			return (cancellationToken.IsCancellationRequested ? null : instance);
+			var (success, instance) = await LoadProcess(Addressables.InstantiateAsync(address, parent, inWorldSpace), cancellationToken);
+			return success ? instance : null;
 		}
 		public async UniTask<UnityEngine.ResourceManagement.ResourceProviders.SceneInstance?> LoadScene(string address, UnityEngine.SceneManagement.LoadSceneMode loadMode, bool activateOnLoad = true, CancellationToken cancellationToken = default)
 		{
-			AsyncOperationHandle<UnityEngine.ResourceManagement.ResourceProviders.SceneInstance> handle = Addressables.LoadSceneAsync(address, loadMode, activateOnLoad);
-
-			var scene = await LoadProcess(handle, cancellationToken);
-			if (cancellationToken.IsCancellationRequested) { Addressables.Release(handle); }
-
-			return (cancellationToken.IsCancellationRequested ? null : scene);
+			var (success, scene) = await LoadProcess(Addressables.LoadSceneAsync(address, loadMode, activateOnLoad), cancellationToken);
+			return success ? scene : (UnityEngine.ResourceManagement.ResourceProviders.SceneInstance?)null;
 		}
 #endif
 #if TOMO_ADDRESSABLES
@@ -65,7 +49,8 @@ namespace Tomo.Asset
 
 		// Private
 #if TOMO_UNITASK
-		private async UniTask<T_ASSET> LoadProcess<T_ASSET>(AsyncOperationHandle<T_ASSET> handle, CancellationToken cancellationToken)
+		// 取消、失敗或例外時一律釋放 handle,避免 Addressables 參考計數洩漏
+		private async UniTask<(bool success, T_ASSET result)> LoadProcess<T_ASSET>(AsyncOperationHandle<T_ASSET> handle, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -73,13 +58,18 @@ namespace Tomo.Asset
 					.ToUniTask(cancellationToken: cancellationToken)
 					.SuppressCancellationThrow();
 
-				return isCanceled ? default : result;
+				if (!isCanceled && handle.Status == AsyncOperationStatus.Succeeded)
+				{
+					return (true, result);
+				}
 			}
 			catch (System.Exception e)
 			{
 				Debug.LogException(e);
-				return default;
 			}
+
+			if (handle.IsValid()) { Addressables.Release(handle); }
+			return (false, default);
 		}
 #endif
 	}

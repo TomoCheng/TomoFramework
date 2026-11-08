@@ -23,6 +23,7 @@ namespace Tomo.UI
 			_loadedResourceMap = new Dictionary<string, GameObject>();
 			_loadingTaskMap = new Dictionary<string, UniTask<bool>>();
 			_residentUIs = new HashSet<string>();
+			_labelOwnedUIs = new HashSet<string>();
 			GetCamera(true);
 
 			await PreloadUIs();
@@ -63,12 +64,17 @@ namespace Tomo.UI
 		{
 			if (_loadedResourceMap.ContainsKey(name)) { return true; }
 
+			// 同名載入共用一個 task;載入本身不吃呼叫端的 token,
+			// 避免第一個呼叫者取消時連帶讓其他等待者失敗
 			if (!_loadingTaskMap.TryGetValue(name, out UniTask<bool> loadingTask))
 			{
-				loadingTask = LoadInternal(name, cancellationToken).Preserve();
+				loadingTask = LoadInternal(name).Preserve();
 				_loadingTaskMap.Add(name, loadingTask);
 			}
-			return await loadingTask;
+			var (isCanceled, loaded) = await loadingTask
+				.AttachExternalCancellation(cancellationToken)
+				.SuppressCancellationThrow();
+			return !isCanceled && loaded;
 		}
 		public async UniTask<bool> LoadUI(AssetLabelReference label, CancellationToken cancellationToken = default)
 		{
@@ -80,6 +86,7 @@ namespace Tomo.UI
 				if (!_loadedResourceMap.ContainsKey(asset.name))
 				{
 					_loadedResourceMap[asset.name] = asset;
+					_labelOwnedUIs.Add(asset.name);
 				}
 			}
 			return true;
@@ -89,6 +96,12 @@ namespace Tomo.UI
 			if (_residentUIs.Contains(name))
 			{
 				Debug.LogWarning($"[Tomo.Framework] UnloadUI [{name}] skipped, resident UI");
+				return;
+			}
+			// 以 label 批次載入的資源由 list handle 持有,無法逐一 Release
+			if (_labelOwnedUIs.Contains(name))
+			{
+				Debug.LogWarning($"[Tomo.Framework] UnloadUI [{name}] skipped, loaded by label");
 				return;
 			}
 			if (_viewMap.TryGetValue(name, out View view) && view != null)
@@ -121,9 +134,9 @@ namespace Tomo.UI
 				_residentUIs.Add(name);
 			}
 		}
-		private async UniTask<bool> LoadInternal(string name, CancellationToken cancellationToken)
+		private async UniTask<bool> LoadInternal(string name)
 		{
-			GameObject asset = await AssetManager.Instance.LoadAsset<GameObject>(name, cancellationToken);
+			GameObject asset = await AssetManager.Instance.LoadAsset<GameObject>(name, this.GetCancellationTokenOnDestroy());
 			_loadingTaskMap.Remove(name);
 
 			if (asset == null)
@@ -247,6 +260,7 @@ namespace Tomo.UI
 		private Dictionary<string, UniTask<bool>> _loadingTaskMap;
 #endif
 		private HashSet<string> _residentUIs;
+		private HashSet<string> _labelOwnedUIs;
 
 		// Constants
 		private const int MAX_ORDER_IN_LAYER = 1000;
