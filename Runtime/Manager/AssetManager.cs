@@ -6,6 +6,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using System.Threading;
 #if TOMO_UNITASK
 using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 #endif
 
 namespace Tomo.Asset
@@ -14,6 +15,11 @@ namespace Tomo.Asset
 	{
 		// Public
 #if TOMO_UNITASK
+		public override async UniTask Initialize()
+		{
+			await base.Initialize();
+			await Addressables.InitializeAsync();
+		}
 		public async UniTask<T_ASSET> LoadAsset<T_ASSET>(string address, CancellationToken cancellationToken = default) where T_ASSET : class
 		{
 			AsyncOperationHandle<T_ASSET> handle = Addressables.LoadAssetAsync<T_ASSET>(address);
@@ -22,6 +28,15 @@ namespace Tomo.Asset
 			if (cancellationToken.IsCancellationRequested) { Addressables.Release(handle); }
 
 			return (cancellationToken.IsCancellationRequested ? null : loadAsset);
+		}
+		public async UniTask<IList<T_ASSET>> LoadAssetsByLabel<T_ASSET>(string label, CancellationToken cancellationToken = default) where T_ASSET : class
+		{
+			AsyncOperationHandle<IList<T_ASSET>> handle = Addressables.LoadAssetsAsync<T_ASSET>(label, null);
+
+			var assets = await LoadProcess(handle, cancellationToken);
+			if (cancellationToken.IsCancellationRequested) { Addressables.Release(handle); }
+
+			return (cancellationToken.IsCancellationRequested ? null : assets);
 		}
 		public async UniTask<GameObject> Instantiate(string address, Transform parent = null, bool inWorldSpace = false, CancellationToken cancellationToken = default)
 		{
@@ -54,10 +69,10 @@ namespace Tomo.Asset
 		{
 			try
 			{
-				//var (isCanceled, result) = await handle.WithCancellation(cancellationToken).SuppressCancellationThrow();
-				await UniTask.CompletedTask;
-				bool isCanceled = false;
-				T_ASSET result = default(T_ASSET);
+				var (isCanceled, result) = await handle
+					.ToUniTask(cancellationToken: cancellationToken)
+					.SuppressCancellationThrow();
+
 				return isCanceled ? default : result;
 			}
 			catch (System.Exception e)
@@ -65,12 +80,6 @@ namespace Tomo.Asset
 				Debug.LogException(e);
 				return default;
 			}
-		}
-#endif
-#if TOMO_UNITASK
-		protected override async UniTask Initialize()
-		{
-			await Addressables.InitializeAsync();
 		}
 #endif
 	}

@@ -5,24 +5,31 @@ using UnityEngine;
 
 namespace Tomo.Core
 {
-	public abstract class Singleton<T_TYPE> : MonoBehaviour where T_TYPE : MonoBehaviour
+	public abstract class SingletonBase : MonoBehaviour
 	{
-		// Properties
-		public static T_TYPE Instance { get{ return GetInstance(); } }
-
-		// Protected
-		protected virtual void Awake()
-		{
-			_instance = this as T_TYPE;
-		}
 #if TOMO_UNITASK
-		protected virtual UniTask Initialize()
+		public virtual UniTask Initialize()
 		{
 			return UniTask.CompletedTask;
 		}
 #endif
-        // Private
-        private static T_TYPE GetInstance()
+	}
+
+	public abstract class Singleton<T_TYPE> : SingletonBase where T_TYPE : SingletonBase
+	{
+		// Properties
+		public static T_TYPE Instance { get { return GetInstance(); } }
+
+		// Public
+#if TOMO_UNITASK
+		public override UniTask Initialize()
+		{
+			_instance = this as T_TYPE;
+			return UniTask.CompletedTask;
+		}
+#endif
+		// Private
+		private static T_TYPE GetInstance()
 		{
 			if (_instance == null)
 			{
