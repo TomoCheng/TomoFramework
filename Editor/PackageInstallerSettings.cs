@@ -58,6 +58,12 @@ namespace Tomo.Editor
                 InstallSource = "com.unity.ugui",
                 VersionDefine = new VersionDefine { Expression = "1.0.0", Symbol = "TOMO_UGUI" },
                 AssetImport = new AssetPackageImport { TargetFolder = "Assets/TextMesh Pro", SourcePackagePath = "Packages/com.unity.ugui/Package Resources/TMP Essential Resources.unitypackage" }
+            },
+            new PackageRequirement
+            {
+                PackageId = "com.unity.nuget.newtonsoft-json",
+                InstallSource = "com.unity.nuget.newtonsoft-json",
+                VersionDefine = new VersionDefine { Expression = "3.0.0", Symbol = "TOMO_NEWTONSOFT" }
             }
         };
     }
